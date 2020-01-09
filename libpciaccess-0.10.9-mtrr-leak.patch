@@ -1,0 +1,18 @@
+diff -rup libpciaccess-0.10.9.orig/src/linux_sysfs.c libpciaccess-0.10.9.new/src/linux_sysfs.c
+--- libpciaccess-0.10.9.orig/src/linux_sysfs.c	2011-02-07 16:36:04.400732082 +0000
++++ libpciaccess-0.10.9.new/src/linux_sysfs.c	2011-02-07 16:35:34.519905852 +0000
+@@ -406,6 +406,13 @@ pci_device_linux_sysfs_destroy( void )
+     if (config_fd != -1)
+ 	close( config_fd );
+     config_fd = -1;
++
++#ifdef HAVE_MTRR
++    if (pci_sys->mtrr_fd != -1)
++        close(pci_sys->mtrr_fd);
++    pci_sys->mtrr_fd = -1;
++#endif
++
+ }
+ 
+ static int
+Only in libpciaccess-0.10.9.new/src: linux_sysfs.c~
