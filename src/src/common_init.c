@@ -62,7 +62,7 @@ pci_system_init( void )
     err = pci_system_openbsd_create();
 #elif defined(__sun)
     err = pci_system_solx_devfs_create();
-#elif defined(__GNU__)
+#elif defined(__GNU__) || defined(__CYGWIN__)
     err = pci_system_x86_create();
 #endif
 
@@ -116,7 +116,6 @@ pci_system_cleanup( void )
 	pci_sys->devices = NULL;
 	pci_sys->num_devices = 0;
     }
-
 
     if ( pci_sys->methods->destroy != NULL ) {
 	(*pci_sys->methods->destroy)();

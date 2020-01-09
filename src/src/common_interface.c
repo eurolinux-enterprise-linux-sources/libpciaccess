@@ -36,7 +36,7 @@
 #include "pciaccess.h"
 #include "pciaccess_private.h"
 
-#if defined(__linux__) || defined(__GLIBC__)
+#if defined(__linux__) || defined(__GLIBC__) || defined(__CYGWIN__)
 #include <byteswap.h>
 
 #if __BYTE_ORDER == __BIG_ENDIAN
@@ -268,7 +268,7 @@ pci_device_map_range(struct pci_device *dev, pciaddr_t base,
 
 
     for (region = 0; region < 6; region++) {
-        const struct pci_mem_region const* r = &dev->regions[region];
+        const struct pci_mem_region * const r = &dev->regions[region];
 
         if (r->size != 0) {
             if ((r->base_addr <= base) && ((r->base_addr + r->size) > base)) {
