@@ -22,26 +22,30 @@ dnl DEALINGS IN THE SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
+# Initialize Autoconf
+AC_PREREQ([2.60])
+AC_INIT([libpciaccess],[0.12.1],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess],[libpciaccess])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
 
-AC_INIT(libpciaccess, 0.10.9, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess], libpciaccess)
-AM_INIT_AUTOMAKE([dist-bzip2])
+# Initialize Automake
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.2)
-AM_CONFIG_HEADER(config.h)
+# Require xorg-macros: XORG_DEFAULT_OPTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.3)
+XORG_DEFAULT_OPTIONS
 
 # Check for progs
-AC_PROG_CC
 AC_PROG_LIBTOOL
-XORG_CWARNFLAGS
 
 pciids_path=/usr/share/hwdata
-AC_ARG_WITH(pciids-path, AC_HELP_STRING([--with-pciids-path=PCIIDS_PATH],
+AC_ARG_WITH(pciids-path, AS_HELP_STRING([--with-pciids-path=PCIIDS_PATH],
 	[Path to pci.ids file]), [pciids_path="$withval"])
-AC_DEFINE_DIR(PCIIDS_PATH, pciids_path, [Path to pci.ids])
+AX_DEFINE_DIR(PCIIDS_PATH, pciids_path, [Path to pci.ids])
 
 AC_ARG_ENABLE(linux-rom-fallback, AS_HELP_STRING([--enable-linux-rom-fallback],
 		[Enable support for falling back to /dev/mem for roms (default: disabled)]),
@@ -52,7 +56,7 @@ if test "x$LINUX_ROM" = xyes; then
 fi
 
 use_zlib=no
-AC_ARG_WITH(zlib, AC_HELP_STRING([--with-zlib],
+AC_ARG_WITH(zlib, AS_HELP_STRING([--with-zlib],
 	[Enable zlib support to read gzip compressed pci.ids]),
 	[use_zlib="$withval"])
 if test "x$use_zlib" = xyes; then
@@ -89,6 +93,9 @@ case $host_os in
 		solaris=yes
 		PCIACCESS_LIBS="$PCIACCESS_LIBS -ldevinfo"
 		;;
+	gnu*)
+		gnu=yes
+		;;
 esac
 
 AM_CONDITIONAL(LINUX, [test "x$linux" = xyes])
@@ -96,6 +103,7 @@ AM_CONDITIONAL(FREEBSD, [test "x$freebsd" = xyes])
 AM_CONDITIONAL(NETBSD, [test "x$netbsd" = xyes])
 AM_CONDITIONAL(OPENBSD, [test "x$openbsd" = xyes])
 AM_CONDITIONAL(SOLARIS, [test "x$solaris" = xyes])
+AM_CONDITIONAL(GNU, [test "x$gnu" = xyes])
 
 AC_SYS_LARGEFILE
 
@@ -116,9 +124,11 @@ AC_CHECK_MEMBER([struct pci_io.pi_sel.pc_domain],
 AC_SUBST(PCIACCESS_CFLAGS)
 AC_SUBST(PCIACCESS_LIBS)
 		  
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
 
-AC_OUTPUT([Makefile
+AC_CONFIG_FILES([Makefile
+	   include/Makefile
+	   man/Makefile
 	   src/Makefile
+	   scanpci/Makefile
            pciaccess.pc])
+AC_OUTPUT

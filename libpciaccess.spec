@@ -2,8 +2,8 @@
 %define gitrev e392082abb5696c8837224da86cc0af4f21d7010
 
 Name:           libpciaccess
-Version:        0.10.9
-Release:        4%{?dist}
+Version:        0.12.1
+Release:        1%{?dist}
 Summary:        PCI access library
 
 Group:          System Environment/Libraries
@@ -17,10 +17,7 @@ Source0:	http://xorg.freedesktop.org/archive/individual/lib/%{name}-%{version}.t
 Source1:        make-libpciaccess-snapshot.sh
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-Patch0:		libpciaccess-fd-cache.patch
-Patch1:		libpciaccess-rhel-backport-0.12-fixes.patch
 Patch2:		libpciaccess-rom-size.patch
-Patch3:		libpciaccess-0.10.9-mtrr-leak.patch
 
 BuildRequires:  autoconf automake libtool pkgconfig xorg-x11-util-macros
 Requires:       hwdata
@@ -40,13 +37,9 @@ Development package for libpciaccess.
 
 %prep
 %setup -q -n %{name}-%{version}
-%patch0 -p1 -b .cache
-%patch1 -p1 -b .fixmtrr
 %patch2 -p1 -b .rom-size
-%patch3 -p1 -b .mtrr-fd
 
 %build
-autoreconf -v --install
 %configure --disable-static
 make %{?_smp_mflags}
 
@@ -74,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/pciaccess.pc
 
 %changelog
+* Tue Jun 28 2011 Adam Jackson <ajax@redhat.com> 0.12.1-1
+- libpciaccess 0.12.1 (#713771)
+
 * Wed Apr 06 2011 Dave Airlie <airlied@redhat.com> 0.10.9-4
 - fix mtrr fd leak. (#675758)
 

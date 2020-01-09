@@ -24,17 +24,20 @@
 # Include autoconf macros from m4 subdir
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = src
+# Order: scanpci depends on libpciaccess built in src
+SUBDIRS = include man src scanpci
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = pciaccess.pc
 
-EXTRA_DIST = pciaccess.pc.in src/scanpci.c src/scanpci.man ChangeLog
-MAINTAINERCLEANFILES = ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
