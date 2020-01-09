@@ -1,9 +1,9 @@
-%define gitdate 20071031
-%define gitrev e392082abb5696c8837224da86cc0af4f21d7010
+#define gitdate 20111109
+#define gitrev  a0a53a67c91c698007dcac3e7aba27c999c4f6ed
 
 Name:           libpciaccess
-Version:        0.12.1
-Release:        1%{?dist}
+Version:        0.13.1
+Release:        2%{?dist}
 Summary:        PCI access library
 
 Group:          System Environment/Libraries
@@ -12,10 +12,9 @@ URL:            http://gitweb.freedesktop.org/?p=xorg/lib/libpciaccess.git
 
 # git snapshot.  To recreate, run
 # % ./make-libpciaccess-snapshot.sh %{gitrev}
-#Source0:        libpciaccess-20071031.tar.bz2
+#Source0:        libpciaccess-%{gitdate}.tar.bz2
 Source0:	http://xorg.freedesktop.org/archive/individual/lib/%{name}-%{version}.tar.bz2
 Source1:        make-libpciaccess-snapshot.sh
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Patch2:		libpciaccess-rom-size.patch
 
@@ -36,10 +35,11 @@ Requires:       pkgconfig
 Development package for libpciaccess.
 
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q -n %{name}-%{?gitdate:%{gitdate}}%{!?gitdate:%{version}}
 %patch2 -p1 -b .rom-size
 
 %build
+# autoreconf -v --install
 %configure --disable-static
 make %{?_smp_mflags}
 
@@ -56,9 +56,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc COPYING AUTHORS ChangeLog
+%doc COPYING AUTHORS
 %{_libdir}/libpciaccess.so.0
-%{_libdir}/libpciaccess.so.0.10.*
+%{_libdir}/libpciaccess.so.0.11.*
 
 %files devel
 %defattr(-,root,root,-)
@@ -67,17 +67,55 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/pciaccess.pc
 
 %changelog
-* Tue Jun 28 2011 Adam Jackson <ajax@redhat.com> 0.12.1-1
-- libpciaccess 0.12.1 (#713771)
+* Thu Jul 19 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.13.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
 
-* Wed Apr 06 2011 Dave Airlie <airlied@redhat.com> 0.10.9-4
-- fix mtrr fd leak. (#675758)
+* Tue Apr 10 2012 Adam Jackson <ajax@redhat.com> 0.13.1-1
+- libpciaccess 0.13.1
 
-* Wed Mar 23 2011 Dave Airlie <airlied@redhat.com> 0.10.9-3
-- fix double close of config_fd (#675756)
+* Wed Mar 28 2012 Adam Jackson <ajax@redhat.com> 0.13-2
+- libpciaccess-macros.patch: Fix out* macros again
 
-* Fri Jul 23 2010 Dave Airlie <airlied@redhat.com> 0.10.9-2
-- fix MTRR warnings along with couple of other minor issues (#616612)
+* Wed Mar 28 2012 Adam Jackson <ajax@redhat.com> 0.13-1
+- libpciaccess 0.13
+
+* Wed Feb 29 2012 Dan Horák <dan[at]danny.cz> - 0.12.902-6
+- fix the out[bwl] compatibility macros
+
+* Thu Feb 16 2012 Peter Robinson <pbrobinson@fedoraproject.org> - 0.12.902-5
+- Add ARM arch to libpciaccess-lol-dev-port patch
+
+* Wed Feb 08 2012 Adam Jackson <ajax@redhat.com> 0.12.902-4
+- libpciaccess-lol-dev-port.patch: Don't use /dev/port since the kernel insists
+  that it remain unusably broken.
+
+* Fri Jan 13 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.12.902-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild
+
+* Mon Nov 28 2011 Daniel Drake <dsd@laptop.org> 0.12.902-2
+- Add upstream patch to fix ios deletion; fixes X crash on OLPC XO-1.5
+
+* Wed Nov 09 2011 Adam Jackson <ajax@redhat.com> 0.12.902-1
+- libpciaccess 0.12.902
+
+* Wed Nov 09 2011 Peter Hutterer <peter.hutterer@redhat.com> 0.12.901-1
+- Today's git snapshot
+
+* Wed Feb 09 2011 Adam Jackson <ajax@redhat.com> 0.12.1-1
+- libpciaccess 0.12.1
+
+* Tue Feb 08 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.12.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+
+* Wed Jul 21 2010 Dave Airlie <airlied@redhat.com> 0.12.0-1
+- libpciaccess 0.12
+
+* Tue Mar 16 2010 Adam Jackson <ajax@redhat.com> 0.11.0-1
+- libpciaccess 0.11
+
+* Wed Dec 09 2009 Adam Jackson <ajax@redhat.com> 0.10.9-2.20091209
+- New git snapshot
+- Drop the fd cache patch
 
 * Fri Sep 25 2009 Dave Airlie <airlied@redhat.com> 0.10.9-1
 - rebase to latest upstream release - drop patches
@@ -108,7 +146,6 @@ rm -rf $RPM_BUILD_ROOT
 * Mon Jul 27 2009 Dave Airlie <airlied@redhat.com> 0.10.6-1
 - rebase to latest release (will do release with VGA bits later)
 - libpciaccess-boot-vga.patch: add boot vga patch from upstream
-
 
 * Fri Jul 24 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.10.5-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild

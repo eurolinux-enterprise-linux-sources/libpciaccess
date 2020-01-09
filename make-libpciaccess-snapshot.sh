@@ -12,7 +12,13 @@ else
 	bzip2 -c > $DIRNAME-$DATE.tar.bz2
 fi
 
-HASH=$(GIT_DIR=gah.git git-show-ref -s $REV)
+HASH=$(GIT_DIR=$DIRNAME.git git show-ref -s $REV)
+
+echo $HASH
+
+exit 
+
+# the rest of this is supposed to work?  i guess.
 
 version=$(sed -n -e "s/^Version: *\(.*\)/\1/p" < libpciaccess.spec)
 release=$(sed -n -e "s/^Release: *\([^.]*\).*/\1/p" < libpciaccess.spec)
