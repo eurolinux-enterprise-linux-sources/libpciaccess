@@ -1,9 +1,9 @@
-%define gitdate 20140411
-%define gitrev  b9c068896914b4132a24839c9ef7f9fcd6282d88
+#define gitdate 20140411
+#define gitrev  b9c068896914b4132a24839c9ef7f9fcd6282d88
 
 Name:           libpciaccess
-Version:        0.13.3
-Release:        0.1%{?dist}
+Version:        0.13.4
+Release:        1%{?dist}
 Summary:        PCI access library
 
 Group:          System Environment/Libraries
@@ -12,8 +12,8 @@ URL:            http://gitweb.freedesktop.org/?p=xorg/lib/libpciaccess.git
 
 # git snapshot.  To recreate, run
 # % ./make-libpciaccess-snapshot.sh %{gitrev}
-Source0:        libpciaccess-%{gitdate}.tar.bz2
-#Source0:	http://xorg.freedesktop.org/archive/individual/lib/%{name}-%{version}.tar.bz2
+#Source0:        libpciaccess-%{gitdate}.tar.bz2
+Source0:	http://xorg.freedesktop.org/archive/individual/lib/%{name}-%{version}.tar.bz2
 Source1:        make-libpciaccess-snapshot.sh
 
 Patch2:		libpciaccess-rom-size.patch
@@ -39,7 +39,7 @@ Development package for libpciaccess.
 %patch2 -p1 -b .rom-size
 
 %build
-autoreconf -v --install
+autoreconf -vf --install
 %configure --disable-static
 make %{?_smp_mflags}
 
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/pciaccess.pc
 
 %changelog
+* Sat Dec 19 2015 Dave Airlie <airlied@redhat.com> 0.13.4-1
+- libpciaccess 0.13.4 (#1248562)
+
 * Fri Apr 11 2014 Adam Jackson <ajax@redhat.com> 0.13.3-0.1
 - New git snapshot.
 
