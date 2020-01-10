@@ -2,8 +2,8 @@
 #define gitrev  a0a53a67c91c698007dcac3e7aba27c999c4f6ed
 
 Name:           libpciaccess
-Version:        0.13.1
-Release:        4.1%{?dist}
+Version:        0.13.4
+Release:        2%{?dist}
 Summary:        PCI access library
 
 Group:          System Environment/Libraries
@@ -67,6 +67,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/pciaccess.pc
 
 %changelog
+* Fri May 22 2015 Dave Airlie <airlied@redhat.com> 0.13.4-2
+- rebuild due to ppc64le relro issue
+
+* Thu May 21 2015 Dave Airlie <airlied@redhat.com> 0.13.4-1
+- rebase libpciaccess 0.13.4
+
 * Wed Feb 12 2014 Adam Jackson <ajax@redhat.com> 0.13.1-4.1
 - Mass rebuild
 
