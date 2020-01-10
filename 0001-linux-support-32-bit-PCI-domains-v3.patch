@@ -1,0 +1,192 @@
+From a167bd6474522a709ff3cbb00476c0e4309cb66f Mon Sep 17 00:00:00 2001
+From: Stephen Hemminger <stephen@networkplumber.org>
+Date: Mon, 18 Sep 2017 13:17:23 -0400
+Subject: [PATCH libpciaccess] linux: support 32 bit PCI domains (v3)
+
+The PCI domain may be larger than 16 bits on Microsoft Azure and other
+virtual environments. PCI busses reported by ACPI are limited to 16
+bits, but in Azure the domain value for pass through devices is
+intentionally larger than 16 bits to avoid clashing with local devices.
+This is needed to support pass through of GPU devices.
+
+v3: (ajax)
+Update FreeBSD and Solaris backends to preserve the full 32-bit domain
+number, since on those OSes it stands a chance of working already.
+Update NetBSD and OpenBSD backends to initialize domain_16 compatibly
+with older libpciaccess; neither backend appears to support more than a
+handful of domains to begin with though. Trivially update the generic
+x86 backend for source compatibility, though it still only supports one
+domain and will never be better.
+
+Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=101744
+Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+Reviewed-by: Eric Anholt <eric@anholt.net>
+---
+ include/pciaccess.h | 15 ++++++++++++++-
+ src/linux_sysfs.c   | 25 ++++++++++++-------------
+ src/netbsd_pci.c    |  4 ++++
+ src/openbsd_pci.c   |  4 ++++
+ src/solx_devfs.c    |  5 +++++
+ src/x86_pci.c       |  2 +-
+ 6 files changed, 40 insertions(+), 15 deletions(-)
+
+diff --git a/include/pciaccess.h b/include/pciaccess.h
+index 1d7aa4b..8167be6 100644
+--- a/include/pciaccess.h
++++ b/include/pciaccess.h
+@@ -311,6 +311,10 @@ struct pci_mem_region {
+  * PCI device.
+  *
+  * Contains all of the information about a particular PCI device.
++ *
++ * This structure - like everything else in libpciaccess - is allocated
++ * by the library itself. Do not embed this structure in other structs,
++ * or otherwise allocate them yourself.
+  */
+ struct pci_device {
+     /**
+@@ -319,9 +323,12 @@ struct pci_device {
+      * Complete bus identification, including domain, of the device.  On
+      * platforms that do not support PCI domains (e.g., 32-bit x86 hardware),
+      * the domain will always be zero.
++     *
++     * The domain_16 field is provided for binary compatibility with older
++     * libpciaccess.
+      */
+     /*@{*/
+-    uint16_t    domain;
++    uint16_t    domain_16;
+     uint8_t     bus;
+     uint8_t     dev;
+     uint8_t     func;
+@@ -385,6 +392,12 @@ struct pci_device {
+       * Used by the VGA arbiter. Type of resource decoded by the device and
+       * the file descriptor (/dev/vga_arbiter). */
+     int vgaarb_rsrc;
++
++
++    /**
++     * PCI domain value (full 32 bits)
++     */
++    uint32_t    domain;
+ };
+ 
+ 
+diff --git a/src/linux_sysfs.c b/src/linux_sysfs.c
+index dd8ef3e..a8bc2e1 100644
+--- a/src/linux_sysfs.c
++++ b/src/linux_sysfs.c
+@@ -118,28 +118,18 @@ pci_system_linux_sysfs_create( void )
+ 
+ 
+ /**
+- * Filter out the names "." and ".." from the scanned sysfs entries, and
+- * domains requiring 32-bits.
++ * Filter out the names "." and ".." from the scanned sysfs entries.
+  *
+  * \param d  Directory entry being processed by \c scandir.
+  *
+  * \return
+- * Zero if the entry name matches either "." or "..", or the domain requires
+- * 32 bits, non-zero otherwise.
++ * Zero if the entry name matches either "." or ".."
+  *
+  * \sa scandir, populate_entries
+  */
+ static int
+ scan_sys_pci_filter( const struct dirent * d )
+ {
+-    if (d->d_name[0] != '.') {
+-        unsigned dom = 0;
+-
+-        sscanf(d->d_name, "%x:", &dom);
+-        if (dom > USHRT_MAX)
+-            return 0;
+-    }
+-
+     return !((strcmp( d->d_name, "." ) == 0)
+ 	     || (strcmp( d->d_name, ".." ) == 0));
+ }
+@@ -218,10 +208,19 @@ populate_entries( struct pci_system * p )
+ 			(struct pci_device_private *) &p->devices[i];
+ 
+ 
+-		sscanf(devices[i]->d_name, "%04x:%02x:%02x.%1u",
++		sscanf(devices[i]->d_name, "%x:%02x:%02x.%1u",
+ 		       & dom, & bus, & dev, & func);
+ 
+ 		device->base.domain = dom;
++		/*
++		 * Applications compiled with older versions  do not expect
++		 * 32-bit domain numbers. To keep them working, we keep a 16-bit
++		 * version of the domain number at the previous location.
++		 */
++		if (dom > 0xffff)
++		     device->base.domain_16 = 0xffff;
++		else
++		     device->base.domain_16 = dom;
+ 		device->base.bus = bus;
+ 		device->base.dev = dev;
+ 		device->base.func = func;
+diff --git a/src/netbsd_pci.c b/src/netbsd_pci.c
+index f972f94..1f3bcea 100644
+--- a/src/netbsd_pci.c
++++ b/src/netbsd_pci.c
+@@ -959,6 +959,10 @@ pci_system_netbsd_create(void)
+ 					continue;
+ 
+ 				device->base.domain = domain;
++				if (domain > 0xffff)
++				    device->base.domain_16 = 0xffff;
++				else
++				    device->base.domain_16 = domain & 0xffff;
+ 				device->base.bus = bus;
+ 				device->base.dev = dev;
+ 				device->base.func = func;
+diff --git a/src/openbsd_pci.c b/src/openbsd_pci.c
+index b8ce318..c061fd8 100644
+--- a/src/openbsd_pci.c
++++ b/src/openbsd_pci.c
+@@ -656,6 +656,10 @@ pci_system_openbsd_create(void)
+ 						continue;
+ 
+ 					device->base.domain = domain;
++					if (domain > 0xffff)
++					    device->base.domain_16 = 0xffff;
++					else
++					    device->base.domain_16 = domain & 0xffff;
+ 					device->base.bus = bus;
+ 					device->base.dev = dev;
+ 					device->base.func = func;
+diff --git a/src/solx_devfs.c b/src/solx_devfs.c
+index 46fc301..dc1464d 100644
+--- a/src/solx_devfs.c
++++ b/src/solx_devfs.c
+@@ -213,6 +213,11 @@ probe_device_node(di_node_t node, void *arg)
+     pci_base->dev = PCI_REG_DEV_G(retbuf[0]);
+     pci_base->func  = PCI_REG_FUNC_G(retbuf[0]);
+ 
++    if (nexus->domain > 0xffff)
++	pci_base->domain_16 = 0xffff;
++    else
++	pci_base->domain_16 = nexus->domain;
++
+     /* Get property values */
+     for (i = 0; i < NUM_PROPERTIES; i++) {
+ 	len = di_prop_lookup_ints(DDI_DEV_T_ANY, node,
+diff --git a/src/x86_pci.c b/src/x86_pci.c
+index 32daa04..6b6a026 100644
+--- a/src/x86_pci.c
++++ b/src/x86_pci.c
+@@ -915,7 +915,7 @@ pci_system_x86_create(void)
+ 		if (PCI_VENDOR(reg) == PCI_VENDOR_INVALID ||
+ 		    PCI_VENDOR(reg) == 0)
+ 		    continue;
+-		device->base.domain = 0;
++		device->base.domain = device->base.domain_16 = 0;
+ 		device->base.bus = bus;
+ 		device->base.dev = dev;
+ 		device->base.func = func;
+-- 
+2.14.2
+
