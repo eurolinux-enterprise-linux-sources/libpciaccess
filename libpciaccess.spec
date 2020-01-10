@@ -3,7 +3,7 @@
 
 Name:           libpciaccess
 Version:        0.13.4
-Release:        3.1%{?dist}
+Release:        3%{?dist}
 Summary:        PCI access library
 
 Group:          System Environment/Libraries
@@ -20,7 +20,6 @@ Patch2:		libpciaccess-rom-size.patch
 
 Patch3:		0001-linux_sysfs-include-limits.h-for-PATH_MAX.patch
 Patch4:		0001-Ignore-32-bit-domains.patch
-Patch5:		0001-linux-support-32-bit-PCI-domains-v3.patch
 
 BuildRequires:  autoconf automake libtool pkgconfig xorg-x11-util-macros
 Requires:       hwdata
@@ -39,7 +38,10 @@ Requires:       pkgconfig
 Development package for libpciaccess.
 
 %prep
-%autosetup -p1
+%setup -q -n %{name}-%{?gitdate:%{gitdate}}%{!?gitdate:%{version}}
+%patch2 -p1 -b .rom-size
+%patch3 -p1 -b .limits
+%patch4 -p1 -b .domain32
 
 %build
 # autoreconf -v --install
@@ -70,9 +72,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/pciaccess.pc
 
 %changelog
-* Thu Oct 26 2017 Adam Jackson <ajax@redhat.com> - 0.13.4-3.1
-- Add support for 32-bit domains
-
 * Mon Nov 14 2016 Dave Airlie <airlied@redhat.com> - 0.13.4-3
 - add support to ignore 32-bit domains (#1380184)
 
