@@ -13,6 +13,9 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <sys/param.h>
 #include <sys/ioctl.h>
@@ -653,6 +656,10 @@ pci_system_openbsd_create(void)
 						continue;
 
 					device->base.domain = domain;
+					if (domain > 0xffff)
+					    device->base.domain_16 = 0xffff;
+					else
+					    device->base.domain_16 = domain & 0xffff;
 					device->base.bus = bus;
 					device->base.dev = dev;
 					device->base.func = func;

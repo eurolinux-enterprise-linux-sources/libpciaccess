@@ -2,8 +2,8 @@
 #define gitrev  a0a53a67c91c698007dcac3e7aba27c999c4f6ed
 
 Name:           libpciaccess
-Version:        0.13.4
-Release:        3%{?dist}
+Version:        0.14
+Release:        1%{?dist}
 Summary:        PCI access library
 
 Group:          System Environment/Libraries
@@ -13,13 +13,10 @@ URL:            http://gitweb.freedesktop.org/?p=xorg/lib/libpciaccess.git
 # git snapshot.  To recreate, run
 # % ./make-libpciaccess-snapshot.sh %{gitrev}
 #Source0:        libpciaccess-%{gitdate}.tar.bz2
-Source0:	http://xorg.freedesktop.org/archive/individual/lib/%{name}-%{version}.tar.bz2
+Source0:	https://xorg.freedesktop.org/archive/individual/lib/%{name}-%{version}.tar.bz2
 Source1:        make-libpciaccess-snapshot.sh
 
 Patch2:		libpciaccess-rom-size.patch
-
-Patch3:		0001-linux_sysfs-include-limits.h-for-PATH_MAX.patch
-Patch4:		0001-Ignore-32-bit-domains.patch
 
 BuildRequires:  autoconf automake libtool pkgconfig xorg-x11-util-macros
 Requires:       hwdata
@@ -40,8 +37,6 @@ Development package for libpciaccess.
 %prep
 %setup -q -n %{name}-%{?gitdate:%{gitdate}}%{!?gitdate:%{version}}
 %patch2 -p1 -b .rom-size
-%patch3 -p1 -b .limits
-%patch4 -p1 -b .domain32
 
 %build
 # autoreconf -v --install
@@ -72,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/pciaccess.pc
 
 %changelog
+* Mon Oct 23 2017 Adam Jackson <ajax@redhat.com> - 0.14-1
+- libpciaccess 0.14
+
 * Mon Nov 14 2016 Dave Airlie <airlied@redhat.com> - 0.13.4-3
 - add support to ignore 32-bit domains (#1380184)
 
